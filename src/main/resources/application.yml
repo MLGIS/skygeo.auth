@@ -9,7 +9,7 @@ spring:
         password: manager543
         roles: MANAGER,USER
       - username: user
-        password: user654
+        password: user
         roles: USER
       - username: guest
         password: guest543
