@@ -30,3 +30,5 @@ spring:
         provider:
           spring:
             issuer-uri: http://localhost:9000
+  main:
+    allow-bean-definition-overriding: true

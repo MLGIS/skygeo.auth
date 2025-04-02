@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -22,6 +21,7 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
@@ -58,27 +58,30 @@ import com.nimbusds.jose.proc.SecurityContext;
 import com.skygeo.security.oauth2.OAuth2ResourceOwnerPasswordAuthenticationConverter;
 import com.skygeo.security.oauth2.OAuth2ResourceOwnerPasswordAuthenticationProvider;
 
-
 @Configuration
 public class AuthorizationServerConfig {
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
 
-    @Bean
-    public OAuth2AuthorizationService authorizationService() {
-        return new InMemoryOAuth2AuthorizationService();
+    public AuthorizationServerConfig(
+            AuthenticationManager authenticationManager,
+            PasswordEncoder passwordEncoder) {
+        this.authenticationManager = authenticationManager;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Bean
     @Order(1)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain authorizationServerSecurityFilterChain(
+            HttpSecurity http,
+            RegisteredClientRepository clientRepository,
+            OAuth2AuthorizationService authorizationService,
+            OAuth2TokenGenerator<?> tokenGenerator) throws Exception {
+        
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 
-        org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = 
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = 
             http.getConfigurer(OAuth2AuthorizationServerConfigurer.class);
         
         authorizationServerConfigurer
@@ -95,23 +98,26 @@ public class AuthorizationServerConfig {
                     .authenticationProvider(
                         new OAuth2ResourceOwnerPasswordAuthenticationProvider(
                             authenticationManager,
-                            authorizationService(),
-                            tokenGenerator()
+                            authorizationService,
+                            tokenGenerator
                         )
                     )
             );
 
-        http.exceptionHandling(exceptions -> 
-            exceptions.authenticationEntryPoint(
-                new LoginUrlAuthenticationEntryPoint("/login"))
-        );
-
-        return http
+        http
+            .exceptionHandling(exceptions -> 
+                exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
             .csrf(csrf -> csrf.ignoringRequestMatchers("/oauth2/token", "/oauth2/authorize"))
-            .formLogin(Customizer.withDefaults())
-            .build();
+            .formLogin(Customizer.withDefaults());
+
+        return http.build();
     }
+
+    /*@Bean
+    public OAuth2AuthorizationService authorizationService() {
+        return new InMemoryOAuth2AuthorizationService();
+    }*/
 
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
@@ -136,7 +142,7 @@ public class AuthorizationServerConfig {
         return new InMemoryRegisteredClientRepository(registeredClient);
     }
 
-    @Bean
+    /*@Bean
     public JWKSource<SecurityContext> jwkSource() {
         KeyPair keyPair = generateRsaKey();
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
@@ -147,14 +153,12 @@ public class AuthorizationServerConfig {
                 .build();
         JWKSet jwkSet = new JWKSet(rsaKey);
         return new ImmutableJWKSet<SecurityContext>(jwkSet);
-    }
+    }*/
 
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
         return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
-
-   
 
     @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
@@ -181,7 +185,7 @@ public class AuthorizationServerConfig {
         };
     }
 
-    @Bean
+    /*@Bean
     public OAuth2TokenGenerator<?> tokenGenerator() {
         JwtGenerator jwtGenerator = new JwtGenerator(new NimbusJwtEncoder(jwkSource()));
         jwtGenerator.setJwtCustomizer(jwtCustomizer());
@@ -193,6 +197,7 @@ public class AuthorizationServerConfig {
             refreshTokenGenerator
         );
     }
+    */
 
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
@@ -207,6 +212,7 @@ public class AuthorizationServerConfig {
             .build();
     }
 
+    /* 
     private static KeyPair generateRsaKey() {
         KeyPair keyPair;
         try {
@@ -218,4 +224,5 @@ public class AuthorizationServerConfig {
         }
         return keyPair;
     }
+        */
 }
