@@ -1,0 +1,16 @@
+spring:
+  security:
+    users:
+      - username: admin
+        # Passwords should be encoded using BCrypt
+        password: $2a$10$CXLerA.8Xn11PsulfRH87O.ycwHupuLI4S.QdQikqNxJTzXcoTZ7i
+        roles: ADMIN,MANAGER,USER
+      - username: manager
+        password: manager543
+        roles: MANAGER,USER
+      - username: user
+        password: user654
+        roles: USER
+      - username: guest
+        password: guest543
+        roles: GUEST
