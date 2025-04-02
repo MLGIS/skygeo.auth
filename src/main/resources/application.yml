@@ -14,3 +14,19 @@ spring:
       - username: guest
         password: guest543
         roles: GUEST
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9000
+      client:
+        registration:
+          skygeo-client:
+            provider: spring
+            client-id: skygeo-client
+            client-secret: secret
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://127.0.0.1:8080/login/oauth2/code/skygeo-client"
+            scope: openid,read,write
+        provider:
+          spring:
+            issuer-uri: http://localhost:9000
