@@ -2,6 +2,7 @@ package com.skygeo.security.service;
 
 import com.skygeo.security.repository.UserRepository;
 import com.skygeo.security.entity.User;
+import com.skygeo.security.entity.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -11,9 +12,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -39,23 +40,22 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
-                user.isEnabled(),
+                /*user.isEnabled(),
                 user.isAccountNonExpired(),
                 user.isCredentialsNonExpired(),
                 user.isAccountNonLocked(),
+                */
                 authorities
         );
     }
 
-    private List<SimpleGrantedAuthority> parseAuthorities(String rolesString) {
-        if (!StringUtils.hasText(rolesString)) {
+    private List<SimpleGrantedAuthority> parseAuthorities(Set<Role> roles) {
+        if (roles == null || roles.isEmpty()) {
             throw new IllegalStateException("User roles cannot be empty");
         }
 
-        return Arrays.stream(rolesString.split(","))
-                .map(String::trim)
-                .filter(StringUtils::hasText)
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+        return roles.stream()
+                .map(role->new SimpleGrantedAuthority("ROLE_" + role.getName()))
                 .collect(Collectors.toList());
     }
 }
