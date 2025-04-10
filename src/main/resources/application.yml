@@ -1,7 +1,7 @@
 server:
   port: 9000
   servlet:
-    context-path: /abc
+    context-path: /
 
 spring:
   security:
@@ -19,3 +19,18 @@ spring:
       - username: guest
         password: guest543
         roles: GUEST
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    enabled: true
+  show-actuator: false
+  packages-to-scan: com.skygeo.security.controller
+
+wechat:
+  iniapp:
+    appId:wxbc64a5e5dde7d9b1
+    appSecret:wxbc64a5e5dde7d9b1
